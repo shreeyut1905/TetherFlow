@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flow-map training runs</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="viz-root">
+  <header class="top">
+    <div>
+      <h1>Flow-map training runs</h1>
+      <p class="subtitle" id="subtitle">Per-bucket training losses and any-step eval samples for each run.</p>
+    </div>
+    <div>
+      <button class="btn" id="theme-btn" type="button" title="Switch color theme">Theme: auto</button>
+    </div>
+  </header>
+
+  <section class="runs" id="run-tiles" aria-label="Run status"></section>
+
+  <div class="controls" role="group" aria-label="Chart controls">
+    <label>Smoothing
+      <input type="range" id="smooth" min="0" max="0.99" step="0.01" value="0.9" aria-describedby="smooth-val">
+      <span id="smooth-val" class="muted">0.90</span>
+    </label>
+    <span class="seg" role="group" aria-label="Y scale">
+      <button class="btn" type="button" data-yscale="linear" aria-pressed="false">Linear</button>
+      <button class="btn" type="button" data-yscale="log" aria-pressed="true">Log</button>
+    </span>
+    <label><input type="checkbox" id="show-raw" checked> Show unsmoothed</label>
+    <span class="muted" id="updated">Loading…</span>
+  </div>
+
+  <section class="block" aria-labelledby="loss-h">
+    <div class="block-head">
+      <h2 id="loss-h">Training losses by (t, r) bucket</h2>
+      <div class="legend" id="legend-loss"></div>
+    </div>
+    <p class="block-desc" id="loss-desc">Unweighted squared residual of the flow-map regression, per element, averaged over each bucket's samples
+      in the global batch. The r = t bucket is plain flow matching, so it is the same quantity in both runs. For r &lt; t the
+      residual uses each run's own target (MeanFlow: data-velocity tangent; iMF: model-velocity tangent), so the curves show
+      each objective's own fit; the samples below are the like-for-like comparison.</p>
+    <div class="grid cols-4" id="loss-charts"></div>
+  </section>
+
+  <section class="block" aria-labelledby="cons-h">
+    <div class="block-head">
+      <h2 id="cons-h">Any-step consistency</h2>
+      <div class="legend" id="legend-cons"></div>
+    </div>
+    <p class="block-desc">Mean squared distance, in the VAE latent space, between each few-step sample and the 16-step sample from
+      the same noise and prompt (eval prompts). An exact flow map gives the same image at every NFE, so lower is better.</p>
+    <div class="grid cols-4" id="cons-charts"></div>
+  </section>
+
+  <section class="block" aria-labelledby="samples-h">
+    <div class="block-head">
+      <h2 id="samples-h">Eval samples</h2>
+      <div class="legend" id="legend-samples"></div>
+    </div>
+    <p class="block-desc">Same prompts and noise at every eval. Columns are the number of student steps (NFE); rows compare the
+      runs at the selected iteration. Click a sample to enlarge it.</p>
+    <div class="sample-controls" role="group" aria-label="Eval iteration">
+      <button class="btn" type="button" id="iter-prev" aria-label="Previous eval">‹</button>
+      <input type="range" id="iter-slider" min="0" max="0" step="1" value="0" aria-label="Eval iteration">
+      <button class="btn" type="button" id="iter-next" aria-label="Next eval">›</button>
+      <span id="iter-label">No evals yet</span>
+      <label><input type="checkbox" id="follow-latest" checked> Follow latest</label>
+    </div>
+    <div id="samples"></div>
+  </section>
+
+  <footer id="footer">Auto-refreshes every 15 s. Served locally by scripts/flowmap_dashboard/serve.py.</footer>
+</div>
+
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Enlarged sample">
+  <img id="lightbox-img" alt="">
+  <div class="caption" id="lightbox-cap"></div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
